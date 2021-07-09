@@ -1,6 +1,7 @@
 package com.nhattan.ecommerce.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -20,6 +21,9 @@ public interface IAddressRepository extends JpaRepository<AddressEntity, Integer
 	void updateAddressByAddressID(@Param("fullname") String fullname, @Param("address") String address,
 			@Param("address") int addressID);
 
-	@Query(value = "SELECT * FROM Address WHERE customerID = :customerID", nativeQuery = true)
-	List<CustomerEntity> findByCustomerID(@Param("customerID") int customerID);
+			@Query(value = "SELECT * FROM Address WHERE customerID = :customerID", nativeQuery = true)
+			List<CustomerEntity> findByCustomerID(@Param("customerID") int customerID);
+
+			@Query(value = "SELECT * FROM Addresses WHERE addressID = :addressID AND customerID = :customerID", nativeQuery = true)
+			Optional<AddressEntity> findOneByAddressIDAndCustomerID(@Param("addressID") int addressID, @Param("customerID") int customerID);
 }

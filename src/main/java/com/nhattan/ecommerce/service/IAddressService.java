@@ -2,13 +2,11 @@ package com.nhattan.ecommerce.service;
 
 import java.util.List;
 
-import com.nhattan.ecommerce.request.CreateAddressRequest;
-import com.nhattan.ecommerce.request.UpdateAddressRequest;
-import com.nhattan.ecommerce.response.AddressResponse;
+import com.nhattan.ecommerce.dto.AddressDTO;
 
 public interface IAddressService {
-	AddressResponse save(CreateAddressRequest addressRequest);
-	AddressResponse update(UpdateAddressRequest addressRequest);
+	AddressDTO save(AddressDTO addressRequest);
+	AddressDTO update(AddressDTO addressRequest);
 	void delete(Integer addressID);
-	List<AddressResponse> showAll(int customerID);
+	List<AddressDTO> showAll(int customerID);
 }

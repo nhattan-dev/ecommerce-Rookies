@@ -3,12 +3,12 @@ package com.nhattan.ecommerce.controller.output;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.nhattan.ecommerce.response.ProductResponse;
+import com.nhattan.ecommerce.dto.ProductDTO;
 
 public class ProductOutput {
 	private int page;
 	private int totalPage;
-	private List<ProductResponse> listResult = new ArrayList<>();
+	private List<ProductDTO> listResult = new ArrayList<>();
 
 	public int getPage() {
 		return page;
@@ -26,11 +26,11 @@ public class ProductOutput {
 		this.totalPage = totalPage;
 	}
 
-	public List<ProductResponse> getListResult() {
+	public List<ProductDTO> getListResult() {
 		return listResult;
 	}
 
-	public void setListResult(List<ProductResponse> listResult) {
+	public void setListResult(List<ProductDTO> listResult) {
 		this.listResult = listResult;
 	}
 

@@ -4,35 +4,49 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 
-import com.nhattan.ecommerce.request.CreateProductColorRequest;
-import com.nhattan.ecommerce.request.CreateProductImageRequest;
-import com.nhattan.ecommerce.request.CreateProductRequest;
-import com.nhattan.ecommerce.request.CreateProductSizeRequest;
-import com.nhattan.ecommerce.request.UpdateProductRequest;
-import com.nhattan.ecommerce.response.ProductResponse;
+import com.nhattan.ecommerce.dto.ProductColorDTO;
+import com.nhattan.ecommerce.dto.ProductDTO;
+import com.nhattan.ecommerce.dto.ProductImageDTO;
+import com.nhattan.ecommerce.dto.ProductSizeDTO;
 
 public interface IProductService {
-	ProductResponse saveProduct(CreateProductRequest productRequest);
+	ProductDTO saveProduct(ProductDTO productRequest);
 
-	ProductResponse update(UpdateProductRequest productRequest);
+	ProductDTO updateProduct(ProductDTO productRequest);
 
-	void delete(Integer id);
+	void invalidateProduct(Integer id);
 
-	List<ProductResponse> findAll(Pageable pageable);
+	List<ProductDTO> findAll(Pageable pageable);
 
-	ProductResponse findOne(int productID);
+	List<ProductDTO> findProductNotAvailable(int page, int limit, String sort);
+
+	List<ProductDTO> findProductAvailable(int page, int limit, String sort);
+
+	List<ProductDTO> findProductAvailableBySubcategoryID(int page, int limit, String sort, int subcategoryID);
+
+	ProductDTO findOneProduct(int productID);
+
+	ProductDTO findOneProductAvailable(int productID);
 
 	int totalItem();
 
-	ProductResponse saveColor(CreateProductColorRequest colorRequest);
+	int totalAvailableItem();
 
-	ProductResponse saveImage(CreateProductImageRequest imageRequest);
+	int totalNotAvailableItem();
 
-	ProductResponse saveSize(CreateProductSizeRequest sizeRequest);
+	int totalAvailableItemBySubcategory(int subcategoryID);
+
+	ProductColorDTO saveColor(ProductColorDTO colorRequest);
+
+	ProductImageDTO saveImage(ProductImageDTO imageRequest);
+
+	ProductSizeDTO saveSize(ProductSizeDTO sizeRequest);
 
 	String deleteColor(int productColorID);
 
 	String deleteImage(int productImageID);
 
 	String deleteSize(int productSizeID);
+	
+	String reactivityProduct(int productID);
 }

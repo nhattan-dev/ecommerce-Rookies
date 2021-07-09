@@ -9,6 +9,8 @@ import javax.validation.constraints.Min;
 public class OrderDTO {
 	@Min(message = "must-be-greater-than-or-equals-0", value = 0)
 	private int orderID;
+	@Min(message = "must-be-greater-than-or-equals-1", value = 1)
+	private int addressID;
 	private String orderCode;
 	private int transactStatus;
 	private int paid;
@@ -65,6 +67,14 @@ public class OrderDTO {
 		this.customerID = customerID;
 	}
 
+	public int getAddressID() {
+		return addressID;
+	}
+
+	public void setAddressID(int addressID) {
+		this.addressID = addressID;
+	}
+
 	public List<OrderDetailDTO> getOrderDetails() {
 		return orderDetails;
 	}
@@ -72,4 +82,12 @@ public class OrderDTO {
 	public void setOrderDetails(List<OrderDetailDTO> orderDetails) {
 		this.orderDetails = orderDetails;
 	}
+
+//	public static OrderEntity toEntity(OrderDTO dto) {
+//		OrderEntity order = new OrderEntity();
+//		order.setOrderID(dto.getOrderID());
+//		order.setCustomer(new CustomerEntity(dto.getCustomerID()));
+//		order.setAddress(new AddressEntity(dto.getAddressID()));
+//		return order;
+//	}
 }

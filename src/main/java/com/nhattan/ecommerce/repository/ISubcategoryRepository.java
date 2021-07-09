@@ -25,6 +25,17 @@ public interface ISubcategoryRepository extends JpaRepository<SubcategoryEntity,
 	public List<SubcategoryEntity> findByDeleted(@Param("value") int value);
 
 	public Boolean existsSubcategoryBySubcategoryCode(String subcategoryCode);
-	
+
 	public Boolean existsSubcategoryBySubcategoryID(int subcategoryID);
+
+	@Query(value = "SELECT TOP 1 * FROM Subcategory WHERE deleted = :value AND subcategoryID = :subcategoryID AND (SELECT Category.deleted FROM Category WHERE Category.categoryID = Subcategory.categoryID) = :value", nativeQuery = true)
+	public SubcategoryEntity findOneByValid(@Param("subcategoryID") int subcategoryID, @Param("value") int value);
+
+	@Query(value = "SELECT * FROM Subcategory WHERE deleted = 1 OR subcategoryID "
+			+ "IN (SELECT subcategoryID FROM Category WHERE Category.deleted = 1 "
+			+ "AND Category.categoryID = Subcategory.categoryID)", nativeQuery = true)
+	List<SubcategoryEntity> findByNotAvailable();
+
+	@Query(value = "UPDATE Subcategory SET deleted = :value WHERE subcategoryID = :subcategoryID", nativeQuery = true)
+	void reactivitySubcategory(@Param("subcategoryID") int subcategoryID, @Param("value") int value);
 }

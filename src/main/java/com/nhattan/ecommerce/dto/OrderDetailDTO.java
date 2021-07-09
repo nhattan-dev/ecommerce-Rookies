@@ -15,7 +15,6 @@ public class OrderDetailDTO {
 	private int price;
 	@NotBlank(message = "cannot-be-empty")
 	private String size;
-	private int fulfilled;
 	@Min(message = "must-be-greater-than-or-equals-0", value = 0)
 	private int productID;
 
@@ -57,14 +56,6 @@ public class OrderDetailDTO {
 
 	public void setSize(String size) {
 		this.size = size;
-	}
-
-	public int getFulfilled() {
-		return fulfilled;
-	}
-
-	public void setFulfilled(int fulfilled) {
-		this.fulfilled = fulfilled;
 	}
 
 	public int getProductID() {

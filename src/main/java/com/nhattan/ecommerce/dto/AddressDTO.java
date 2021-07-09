@@ -13,6 +13,7 @@ public class AddressDTO {
 	private String address;
 	@NotBlank(message = "cannot-be-empty")
 	private String phoneNumber;
+	private CustomerDTO customer;
 
 	public int getAddressID() {
 		return addressID;
@@ -44,5 +45,13 @@ public class AddressDTO {
 
 	public void setPhoneNumber(String phoneNumber) {
 		this.phoneNumber = phoneNumber;
+	}
+
+	public CustomerDTO getCustomer() {
+		return customer;
+	}
+
+	public void setCustomer(CustomerDTO customer) {
+		this.customer = customer;
 	}
 }

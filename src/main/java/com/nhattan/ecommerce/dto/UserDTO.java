@@ -19,6 +19,8 @@ public class UserDTO {
 	private String lastName;
 	@Range(min = 0, max = 1, message = "gender-must-be-0-or-1")
 	private int gender;
+	private int valid;
+	private int deleted;
 	private Date dateOfBirth;
 	private CustomerDTO customer;
 	private String role;
@@ -69,6 +71,22 @@ public class UserDTO {
 
 	public void setGender(int gender) {
 		this.gender = gender;
+	}
+
+	public int getValid() {
+		return valid;
+	}
+
+	public void setValid(int valid) {
+		this.valid = valid;
+	}
+
+	public int getDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(int deleted) {
+		this.deleted = deleted;
 	}
 
 	public Date getDateOfBirth() {

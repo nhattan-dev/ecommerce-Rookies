@@ -31,6 +31,15 @@ public class AddressEntity {
 	@JoinColumn(name = "customerID")
 	private CustomerEntity customer;
 
+	public AddressEntity() {
+		super();
+	}
+
+	public AddressEntity(int addressID) {
+		super();
+		this.addressID = addressID;
+	}
+
 	public int getAddressID() {
 		return addressID;
 	}

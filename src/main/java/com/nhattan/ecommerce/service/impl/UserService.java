@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -14,24 +15,29 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.nhattan.ecommerce.dto.UserDTO;
+import com.nhattan.ecommerce.dto.request.CreateUserRequest;
+import com.nhattan.ecommerce.dto.request.LoginRequest;
 import com.nhattan.ecommerce.entity.CustomerEntity;
 import com.nhattan.ecommerce.entity.RoleEntity;
 import com.nhattan.ecommerce.entity.UserEntity;
+import com.nhattan.ecommerce.exception.BadRequestException;
 import com.nhattan.ecommerce.exception.ConflictException;
 import com.nhattan.ecommerce.exception.NotFoundException;
 import com.nhattan.ecommerce.repository.ICustomerRepository;
 import com.nhattan.ecommerce.repository.IRoleRepository;
 import com.nhattan.ecommerce.repository.IUserRepository;
-import com.nhattan.ecommerce.request.CreateUserRequest;
-import com.nhattan.ecommerce.request.UpdateUserRequest;
-import com.nhattan.ecommerce.response.CreateUserResponse;
-import com.nhattan.ecommerce.response.ReadUserResponse;
-import com.nhattan.ecommerce.response.UpdateUserResponse;
 import com.nhattan.ecommerce.security.jwt.JwtUtils;
 import com.nhattan.ecommerce.service.IUserService;
+import com.nhattan.ecommerce.util.OTPUtils;
+
+import io.jsonwebtoken.Jwts;
 
 @Service
-public class UserService implements IUserService{
+public class UserService implements IUserService {
+
+	@Value("${ecommerce.app.jwtSecret}")
+	private String jwtSecret;
 
 	@Autowired
 	private ICustomerRepository customerRepository;
@@ -55,26 +61,17 @@ public class UserService implements IUserService{
 	private JwtUtils jwtService;
 
 	@Override
-	public String login(String username, String password) {
-//		int NotDeletedValue = 0;
-//		System.out.println(encoder.encode(password));
-//		if (userRepository.findOneByEmailAndPasswordAndDeleted(username, encoder.encode(password),
-//				NotDeletedValue) == null)
-//			throw new NotFoundException("email-or-password-maybe-wrong");
-
+	public String login(LoginRequest login) {
+		checkAccountVerification(login.getEmail());
 		Authentication authentication = authenticationManager
-				.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-
-		// if go there, the user/password is correct
+				.authenticate(new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword()));
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-
 		return jwtService.generateJwtToken(authentication);
-//		return null;
 	}
 
 	@Transactional
 	@Override
-	public CreateUserResponse register(CreateUserRequest userRequest) {
+	public UserDTO register(CreateUserRequest userRequest) {
 		if (userRepository.existsByEmail(userRequest.getEmail()))
 			throw new ConflictException("email-already-used");
 
@@ -82,56 +79,84 @@ public class UserService implements IUserService{
 		newCustomer = customerRepository.save(newCustomer);
 
 		String user_role = "ROLE_USER";
-		RoleEntity role = roleRepository.findByRoleLike(user_role);
+		RoleEntity role = roleRepository.findOneByRole(user_role);
 		if (role == null)
 			throw new ConflictException("can-create-user-role-not-found");
 
-		UserEntity newUser = modelMapper.map(userRequest, UserEntity.class);
+		UserEntity newUser = CreateUserRequest.toEntity(userRequest);
 		newUser.setCustomer(newCustomer);
 		newUser.setRole(role);
 		newUser.setPassword(encoder.encode(userRequest.getPassword()));
+		newUser.setOTP(OTPUtils.makeOTP());
 
 		newUser = userRepository.save(newUser);
-		CreateUserResponse newUserResponse = modelMapper.map(newUser, CreateUserResponse.class);
-		return newUserResponse;
+		return modelMapper.map(newUser, UserDTO.class);
 	}
 
 	@Override
-	public List<ReadUserResponse> showAll() {
+	public List<UserDTO> showAll() {
 		System.out.println("show all user");
-		return userRepository.findAll().stream().map(x -> modelMapper.map(x, ReadUserResponse.class))
+		return userRepository.findAll().stream().map(x -> modelMapper.map(x, UserDTO.class))
 				.collect(Collectors.toList());
 	}
 
 	@Transactional
 	@Override
-	public UpdateUserResponse update(UpdateUserRequest userRequest) {
-		if (userRepository.exists(userRequest.getUserID()))
-			throw new NotFoundException("user-not-found");
-		if (userRepository.findOneByEmailAndUserIDNot(userRequest.getEmail(), userRequest.getUserID()) != null)
-			throw new ConflictException("email-already-used");
+	public UserDTO updateUser(UserDTO userRequest, String token) {
+		checkUserExists(userRequest.getUserID());
+		checkAccountVerification(userRequest.getEmail());
+		checkEmailAlreadyUsed(userRequest.getEmail(), userRequest.getUserID());
 
 		String dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").format(userRequest.getDateOfBirth());
 
 		userRepository.updateByUserID(userRequest.getEmail(), userRequest.getPhoneNumber(), userRequest.getFirstName(),
 				userRequest.getLastName(), userRequest.getGender(), dateOfBirth, userRequest.getUserID());
 
-		return modelMapper.map(userRepository.findOne(userRequest.getUserID()), UpdateUserResponse.class);
+		return modelMapper.map(userRepository.findOne(userRequest.getUserID()), UserDTO.class);
 	}
 
 	@Transactional
 	@Override
-	public void delete(int userID) {
+	public void invalidateUser(String token) {
+		String email = getEmailFromToken(token);
+		userRepository.deletedByEmail(email);
+	}
+
+	@Transactional
+	@Override
+	public void changePassword(LoginRequest login, String token) {
+		if (userRepository.findOneByEmail(getEmailFromToken(token)) == null)
+			throw new NotFoundException("email-not-found");
+		String email = getEmailFromToken(token);
+		checkAccountVerification(email);
+		userRepository.updatePasswordByEmail(email, encoder.encode(login.getPassword()));
+	}
+
+	@Override
+	public UserDTO showOneUser(String token) {
+		String email = getEmailFromToken(token);
+		UserEntity user = userRepository.findOneByEmail(email)
+				.orElseThrow(() -> new NotFoundException("email-not-found"));
+		return modelMapper.map(user, UserDTO.class);
+	}
+
+	private void checkAccountVerification(String email) {
+		int notValidValue = 1;
+		if (userRepository.existsByEmailAndValid(email, notValidValue))
+			throw new BadRequestException("unverified-account");
+	}
+
+	private void checkUserExists(int userID) {
 		if (!userRepository.exists(userID))
 			throw new NotFoundException("user-not-found");
-		userRepository.deletedByUserID(userID);
 	}
 
-	@Transactional
-	@Override
-	public void changePassword(String email, String password) {
-		if (userRepository.findOneByEmail(email) == null)
-			throw new NotFoundException("email-not-found");
-		userRepository.updatePasswordByEmail(email, password);
+	private void checkEmailAlreadyUsed(String email, int userID) {
+		if (userRepository.findOneByEmailAndUserIDNot(email, userID) != null)
+			throw new ConflictException("email-already-used");
+	}
+
+	private String getEmailFromToken(String token) {
+		return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
 	}
 }

@@ -26,12 +26,10 @@ public class CategoryService implements ICategoryService {
 	private ModelMapper modelMapper;
 
 	@Override
-	public CategoryDTO save(CategoryDTO category) {
-		CategoryEntity newCategory = modelMapper.map(category, CategoryEntity.class);
+	public CategoryDTO saveCategory(CategoryDTO category) {
+		CategoryEntity newCategory = CategoryDTO.toEntity(category);
 		String categoryCode = VNCharacterUtils.removeAccent(category.getCategoryName().toLowerCase()).replace(" ", "-");
-		if (categoryRepository.existsCategoryByCategoryCode(categoryCode)) {
-			throw new ConflictException("categorycode-already-exists");
-		}
+		checkCategoryCodeUsed(categoryCode);
 		newCategory.setCategoryCode(categoryCode);
 		return modelMapper.map(categoryRepository.save(newCategory), CategoryDTO.class);
 	}
@@ -42,9 +40,33 @@ public class CategoryService implements ICategoryService {
 				.collect(Collectors.toList());
 	}
 
+	@Override
+	public List<CategoryDTO> findCategoryAvailable() {
+		int NotDeleteValue = 0;
+		List<CategoryEntity> list = categoryRepository.findByDeleted(NotDeleteValue);
+		list = list.stream().map(x -> {
+			x.setSubcategories(x.getSubcategories().stream().filter(e -> e.getDeleted() == NotDeleteValue)
+					.collect(Collectors.toList()));
+			return x;
+		}).collect(Collectors.toList());
+		return list.stream().map(x -> modelMapper.map(x, CategoryDTO.class)).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<CategoryDTO> findCategoryNotAvailable() {
+		int NotDeleteValue = 1;
+		List<CategoryEntity> list = categoryRepository.findByDeleted(NotDeleteValue);
+		list = list.stream().map(x -> {
+			x.setSubcategories(x.getSubcategories().stream().filter(e -> e.getDeleted() == NotDeleteValue)
+					.collect(Collectors.toList()));
+			return x;
+		}).collect(Collectors.toList());
+		return list.stream().map(x -> modelMapper.map(x, CategoryDTO.class)).collect(Collectors.toList());
+	}
+
 	@Transactional
 	@Override
-	public void delete(Integer id) {
+	public void invalidateCategory(Integer id) {
 		if (!categoryRepository.existsCategoryByCategoryID(id)) {
 			throw new NotFoundException("category-not-found");
 		}
@@ -53,7 +75,7 @@ public class CategoryService implements ICategoryService {
 
 	@Transactional
 	@Override
-	public CategoryDTO update(CategoryDTO categoryRequest) {
+	public CategoryDTO updateCategory(CategoryDTO categoryRequest) {
 		if (!categoryRepository.exists(categoryRequest.getCategoryID())) {
 			throw new NotFoundException("category-not-found");
 		}
@@ -72,14 +94,15 @@ public class CategoryService implements ICategoryService {
 	}
 
 	@Override
-	public List<CategoryDTO> findAllValid() {
-		int NotDeleteValue = 0;
-		List<CategoryEntity> list = categoryRepository.findByDeleted(NotDeleteValue);
-		list = list.stream().map(x -> {
-			x.setSubcategories(x.getSubcategories().stream().filter(e -> e.getDeleted() == NotDeleteValue)
-					.collect(Collectors.toList()));
-			return x;
-		}).collect(Collectors.toList());
-		return list.stream().map(x -> modelMapper.map(x, CategoryDTO.class)).collect(Collectors.toList());
+	public String reactivityCategory(int categoryID) {
+		int notDeleteValue = 0;
+		categoryRepository.reactivityCategory(categoryID, notDeleteValue);
+		return "successfully";
+	}
+
+	private void checkCategoryCodeUsed(String categoryCode) {
+		if (categoryRepository.existsCategoryByCategoryCode(categoryCode)) {
+			throw new ConflictException("categorycode-already-exists");
+		}
 	}
 }

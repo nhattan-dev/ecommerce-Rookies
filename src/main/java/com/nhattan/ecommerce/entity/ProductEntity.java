@@ -32,7 +32,7 @@ public class ProductEntity {
 	private int point = 0;
 
 	@Column(name = "deleted")
-	private int deleted = 0;
+	private int deleted = 1;
 
 	@Column(name = "quantity")
 	private int quantity;
@@ -63,6 +63,27 @@ public class ProductEntity {
 	public ProductEntity(int productID) {
 		super();
 		this.productID = productID;
+	}
+
+	public ProductEntity(int productID, String name, String description, int quantity, SubcategoryEntity subcategory) {
+		super();
+		this.productID = productID;
+		this.name = name;
+		this.description = description;
+		this.quantity = quantity;
+		this.subcategory = subcategory;
+	}
+
+	public ProductEntity(int productID, String name, String description, int point, int deleted, int quantity,
+			SubcategoryEntity subcategory) {
+		super();
+		this.productID = productID;
+		this.name = name;
+		this.description = description;
+		this.point = point;
+		this.deleted = deleted;
+		this.quantity = quantity;
+		this.subcategory = subcategory;
 	}
 
 	public int getProductID() {
@@ -161,4 +182,58 @@ public class ProductEntity {
 		this.orderDetails = orderDetails;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + deleted;
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((orderDetails == null) ? 0 : orderDetails.hashCode());
+		result = prime * result + point;
+		result = prime * result + productID;
+		result = prime * result + quantity;
+		result = prime * result + ((subcategory == null) ? 0 : subcategory.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ProductEntity other = (ProductEntity) obj;
+		if (deleted != other.deleted)
+			return false;
+		if (description == null) {
+			if (other.description != null)
+				return false;
+		} else if (!description.equals(other.description))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (orderDetails == null) {
+			if (other.orderDetails != null)
+				return false;
+		} else if (!orderDetails.equals(other.orderDetails))
+			return false;
+		if (point != other.point)
+			return false;
+		if (productID != other.productID)
+			return false;
+		if (quantity != other.quantity)
+			return false;
+		if (subcategory == null) {
+			if (other.subcategory != null)
+				return false;
+		} else if (subcategory.getSubcategoryID() != other.subcategory.getSubcategoryID())
+			return false;
+		return true;
+	}
 }

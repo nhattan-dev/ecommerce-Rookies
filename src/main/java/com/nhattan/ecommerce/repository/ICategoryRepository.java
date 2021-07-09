@@ -24,11 +24,14 @@ public interface ICategoryRepository extends JpaRepository<CategoryEntity, Integ
 	public Boolean existsCategoryByCategoryCode(String categoryCode);
 
 	public Boolean existsCategoryByCategoryID(int categoryID);
-
+	
 	@Modifying
 	@Query(value = "UPDATE Category SET categoryName = :categoryName, categoryCode = :categoryCode, "
 			+ "description = :description, imagePath = :imagePath WHERE categoryID = :categoryID", nativeQuery = true)
 	public void updateByCategoryID(@Param("categoryName") String categoryName,
 			@Param("categoryCode") String categoryCode, @Param("description") String description,
 			@Param("imagePath") String imagePath, @Param("categoryID") int categoryID);
+	
+	@Query(value = "UPDATE Category SET deleted = :value WHERE categoryID = :categoryID", nativeQuery = true)
+	void reactivityCategory(@Param("categoryID") int categoryID, @Param("value") int value);
 }

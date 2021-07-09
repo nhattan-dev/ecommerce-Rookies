@@ -16,6 +16,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.GenericGenerator;
+
 @Entity
 @Table(name = "Orders")
 public class OrderEntity {
@@ -25,7 +27,7 @@ public class OrderEntity {
 	private int orderID = 0;
 
 	@Column(name = "orderCode", unique = true, nullable = false)
-	private String orderCode = "";
+	private String orderCode;
 
 	@Column(name = "transactStatus")
 	private int transactStatus = 1;
@@ -37,8 +39,12 @@ public class OrderEntity {
 	private Date orderDate = new Date();
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "customerID")
+	@JoinColumn(name = "customerID", nullable = false)
 	private CustomerEntity customer;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "addressID", nullable = false)
+	private AddressEntity address;
 
 	@OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "order", cascade = CascadeType.REMOVE)
 	private List<OrderDetailEntity> orderDetails = new ArrayList<OrderDetailEntity>();
@@ -50,6 +56,12 @@ public class OrderEntity {
 	public OrderEntity(int orderID) {
 		super();
 		this.orderID = orderID;
+	}
+
+	public OrderEntity(int orderID, CustomerEntity customer) {
+		super();
+		this.orderID = orderID;
+		this.customer = customer;
 	}
 
 	public int getOrderID() {
@@ -98,6 +110,14 @@ public class OrderEntity {
 
 	public void setCustomer(CustomerEntity customer) {
 		this.customer = customer;
+	}
+
+	public AddressEntity getAddress() {
+		return address;
+	}
+
+	public void setAddress(AddressEntity address) {
+		this.address = address;
 	}
 
 	public List<OrderDetailEntity> getOrderDetails() {

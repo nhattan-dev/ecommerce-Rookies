@@ -4,6 +4,9 @@ import javax.validation.constraints.Min;
 
 import org.hibernate.validator.constraints.NotBlank;
 
+import com.nhattan.ecommerce.entity.CategoryEntity;
+import com.nhattan.ecommerce.entity.SubcategoryEntity;
+
 public class SubcategoryForCategoryDTO {
 	@Min(message = "must-be-greater-than-or-equals-0", value = 0)
 	private int subcategoryID = 0;
@@ -11,6 +14,7 @@ public class SubcategoryForCategoryDTO {
 	@NotBlank(message = "cannot-be-empty")
 	private String subcategoryName;
 	private String description;
+
 	@Min(message = "must-be-greater-than-or-equals-0", value = 0)
 
 	public int getSubcategoryID() {
@@ -43,5 +47,14 @@ public class SubcategoryForCategoryDTO {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public static SubcategoryEntity toEntity(SubcategoryDTO dto) {
+		SubcategoryEntity subcategory = new SubcategoryEntity();
+		subcategory.setSubcategoryID(dto.getSubcategoryID());
+		subcategory.setSubcategoryName(dto.getSubcategoryName());
+		subcategory.setDescription(dto.getDescription());
+		subcategory.setCategory(new CategoryEntity(dto.getCategoryID()));
+		return subcategory;
 	}
 }

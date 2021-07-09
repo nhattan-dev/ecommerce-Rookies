@@ -32,7 +32,7 @@ public class SubcategoryEntity {
 	private String description;
 
 	@Column(name = "deleted")
-	private int deleted = 0;
+	private int deleted = 1;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "categoryID", nullable = false)
@@ -40,6 +40,44 @@ public class SubcategoryEntity {
 
 	@OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "subcategory")
 	private List<ProductEntity> products = new ArrayList<ProductEntity>();
+
+	public SubcategoryEntity() {
+		super();
+	}
+
+	public SubcategoryEntity(int subcategoryID) {
+		super();
+		this.subcategoryID = subcategoryID;
+	}
+
+	public SubcategoryEntity(int subcategoryID, String subcategoryCode, String subcategoryName, String description,
+			CategoryEntity category) {
+		super();
+		this.subcategoryID = subcategoryID;
+		this.subcategoryCode = subcategoryCode;
+		this.subcategoryName = subcategoryName;
+		this.description = description;
+		this.category = category;
+	}
+
+	public SubcategoryEntity(int subcategoryID, String subcategoryName, String description, CategoryEntity category) {
+		super();
+		this.subcategoryID = subcategoryID;
+		this.subcategoryName = subcategoryName;
+		this.description = description;
+		this.category = category;
+	}
+
+	public SubcategoryEntity(int subcategoryID, String subcategoryCode, String subcategoryName, String description,
+			int deleted, CategoryEntity category) {
+		super();
+		this.subcategoryID = subcategoryID;
+		this.subcategoryCode = subcategoryCode;
+		this.subcategoryName = subcategoryName;
+		this.description = description;
+		this.deleted = deleted;
+		this.category = category;
+	}
 
 	public int getSubcategoryID() {
 		return subcategoryID;
@@ -95,6 +133,62 @@ public class SubcategoryEntity {
 
 	public void setProducts(List<ProductEntity> products) {
 		this.products = products;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((category == null) ? 0 : category.hashCode());
+		result = prime * result + deleted;
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((subcategoryCode == null) ? 0 : subcategoryCode.hashCode());
+		result = prime * result + subcategoryID;
+		result = prime * result + ((subcategoryName == null) ? 0 : subcategoryName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SubcategoryEntity other = (SubcategoryEntity) obj;
+		if (category == null) {
+			if (other.category != null)
+				return false;
+		} else if (category.getCategoryID() != other.category.getCategoryID())
+			return false;
+		if (deleted != other.deleted)
+			return false;
+		if (description == null) {
+			if (other.description != null)
+				return false;
+		} else if (!description.equals(other.description))
+			return false;
+		if (subcategoryCode == null) {
+			if (other.subcategoryCode != null)
+				return false;
+		} else if (!subcategoryCode.equals(other.subcategoryCode))
+			return false;
+		if (subcategoryID != other.subcategoryID)
+			return false;
+		if (subcategoryName == null) {
+			if (other.subcategoryName != null)
+				return false;
+		} else if (!subcategoryName.equals(other.subcategoryName))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "SubcategoryEntity [subcategoryID=" + subcategoryID + ", subcategoryCode=" + subcategoryCode
+				+ ", subcategoryName=" + subcategoryName + ", description=" + description + ", deleted=" + deleted
+				+ ", category=" + category + "]";
 	}
 
 }

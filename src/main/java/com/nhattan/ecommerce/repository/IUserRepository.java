@@ -15,16 +15,22 @@ public interface IUserRepository extends JpaRepository<UserEntity, Integer> {
 	UserEntity findOneByEmailAndUserIDNot(String email, int userID);
 	
 	Boolean existsByEmail(String email);
+	
+	Boolean existsByEmailAndValid(String email, int valid);
 
 	Optional<UserEntity> findOneByEmail(String email);
+	
+	Optional<UserEntity> findByEmailAndDeletedNot(String email, int deleted);
+	
+	Optional<UserEntity> findByEmail(String email);
 
 	@Modifying
 	@Query(value = "UPDATE Users SET password = :password WHERE email = :email", nativeQuery = true)
 	void updatePasswordByEmail(@Param("email") String email, @Param("password") String password);
 
 	@Modifying
-	@Query(value = "UPDATE Users SET deleted = 1 WHERE userID = :userID", nativeQuery = true)
-	void deletedByUserID(@Param("userID") int userID);
+	@Query(value = "UPDATE Users SET deleted = 1 WHERE email = :email", nativeQuery = true)
+	void deletedByEmail(@Param("email") String email);
 
 	@Modifying
 	@Query(value = "UPDATE Users SET email = :email, phoneNumber = :phoneNumber, firstName = :firstName, "

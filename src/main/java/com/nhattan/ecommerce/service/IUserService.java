@@ -2,17 +2,22 @@ package com.nhattan.ecommerce.service;
 
 import java.util.List;
 
-import com.nhattan.ecommerce.request.CreateUserRequest;
-import com.nhattan.ecommerce.request.UpdateUserRequest;
-import com.nhattan.ecommerce.response.CreateUserResponse;
-import com.nhattan.ecommerce.response.ReadUserResponse;
-import com.nhattan.ecommerce.response.UpdateUserResponse;
+import com.nhattan.ecommerce.dto.UserDTO;
+import com.nhattan.ecommerce.dto.request.CreateUserRequest;
+import com.nhattan.ecommerce.dto.request.LoginRequest;
 
 public interface IUserService {
-	String login(String username, String password);
-	CreateUserResponse register(CreateUserRequest userRequest);
-	UpdateUserResponse update(UpdateUserRequest userRequest);
-	List<ReadUserResponse> showAll();
-	void delete(int userID);
-	void changePassword(String email, String password);
+	String login(LoginRequest login);
+
+	UserDTO register(CreateUserRequest userRequest);
+
+	UserDTO updateUser(UserDTO userRequest, String token);
+
+	List<UserDTO> showAll();
+
+	UserDTO showOneUser(String token);
+
+	void invalidateUser(String token);
+
+	void changePassword(LoginRequest login, String token);
 }

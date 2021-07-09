@@ -8,14 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.nhattan.ecommerce.dto.SubcategoryDTO;
 import com.nhattan.ecommerce.entity.SubcategoryEntity;
 import com.nhattan.ecommerce.exception.ConflictException;
 import com.nhattan.ecommerce.exception.NotFoundException;
 import com.nhattan.ecommerce.repository.ICategoryRepository;
 import com.nhattan.ecommerce.repository.ISubcategoryRepository;
-import com.nhattan.ecommerce.request.CreateSubcategoryRequest;
-import com.nhattan.ecommerce.request.UpdateSubcategoryRequest;
-import com.nhattan.ecommerce.response.ReadSubcagoryResponse;
 import com.nhattan.ecommerce.service.ISubcategoryService;
 import com.nhattan.ecommerce.util.VNCharacterUtils;
 
@@ -33,25 +31,25 @@ public class SubcategoryService implements ISubcategoryService {
 
 	@Transactional
 	@Override
-	public ReadSubcagoryResponse save(CreateSubcategoryRequest subcategoryRequest) {
-		if (!categoryRepository.exists(subcategoryRequest.getCategoryID())) {
+	public SubcategoryDTO saveSubcategory(SubcategoryDTO subcategoryDTO) {
+		if (!categoryRepository.exists(subcategoryDTO.getCategoryID())) {
 			throw new NotFoundException("category-not-found");
 		}
-		SubcategoryEntity newSubcategory = modelMapper.map(subcategoryRequest, SubcategoryEntity.class);
+		SubcategoryEntity newSubcategory = SubcategoryDTO.toEntity(subcategoryDTO);
 		newSubcategory.setSubcategoryID(0);
-		String subcategoryCode = VNCharacterUtils.removeAccent(subcategoryRequest.getSubcategoryName().toLowerCase())
+		String subcategoryCode = VNCharacterUtils.removeAccent(subcategoryDTO.getSubcategoryName().toLowerCase())
 				.replace(" ", "-");
 		if (subcategoryRepository.existsSubcategoryBySubcategoryCode(subcategoryCode)) {
 			throw new ConflictException("try-another-name");
 		}
 		newSubcategory.setSubcategoryCode(subcategoryCode);
 
-		return modelMapper.map(subcategoryRepository.save(newSubcategory), ReadSubcagoryResponse.class);
+		return modelMapper.map(subcategoryRepository.save(newSubcategory), SubcategoryDTO.class);
 	}
 
 	@Transactional
 	@Override
-	public void delete(Integer subcategoryID) {
+	public void invalidateSubcategory(Integer subcategoryID) {
 		if (!subcategoryRepository.exists(subcategoryID)) {
 			throw new NotFoundException("subcategory-not-found");
 		}
@@ -59,20 +57,13 @@ public class SubcategoryService implements ISubcategoryService {
 	}
 
 	@Override
-	public List<ReadSubcagoryResponse> findAll() {
-		subcategoryRepository.findAll().forEach(x -> {
-			x.getProducts().forEach(y -> {
-				System.out.println(y.getPoint());
-			});
-		});
-		return null;
-//		return subcategoryRepository.findAll().stream().map(x -> modelMapper.map(x, ReadSubcagoryResponse.class))
-//				.collect(Collectors.toList());
+	public List<SubcategoryDTO> findAll() {
+		return subcategoryRepository.findAll().stream().map(x -> SubcategoryDTO.toDTO(x)).collect(Collectors.toList());
 	}
 
 	@Transactional
 	@Override
-	public ReadSubcagoryResponse update(UpdateSubcategoryRequest subcategoryReqest) {
+	public SubcategoryDTO updateSubcategory(SubcategoryDTO subcategoryReqest) {
 		if (!subcategoryRepository.exists(subcategoryReqest.getSubcategoryID())) {
 			throw new NotFoundException("subcategory-not-found");
 		}
@@ -89,30 +80,53 @@ public class SubcategoryService implements ISubcategoryService {
 				subcategoryReqest.getDescription(), subcategoryReqest.getCategoryID(),
 				subcategoryReqest.getSubcategoryID());
 		return modelMapper.map(subcategoryRepository.findOne(subcategoryReqest.getSubcategoryID()),
-				ReadSubcagoryResponse.class);
+				SubcategoryDTO.class);
 	}
 
 	@Override
-	public ReadSubcagoryResponse findOne(int subcategoryID) {
-		if (!subcategoryRepository.exists(subcategoryID)) {
+	public SubcategoryDTO findOneSubcategory(int subcategoryID) {
+		SubcategoryEntity subcategory = subcategoryRepository.findOne(subcategoryID);
+		if (subcategory == null)
 			throw new NotFoundException("subcategory-not-found");
-		}
-		return modelMapper.map(subcategoryRepository.findOne(subcategoryID), ReadSubcagoryResponse.class);
+		return SubcategoryDTO.toDTO(subcategory);
 	}
 
 	@Override
-	public List<ReadSubcagoryResponse> findSubcategoryValid() {
+	public SubcategoryDTO findOneSubcategoryAvailable(int subcategoryID) {
+		int NotDeletedValue = 0;
+		SubcategoryEntity subcategory = subcategoryRepository.findOneByValid(subcategoryID, NotDeletedValue);
+		if (subcategory == null)
+			throw new NotFoundException("subcategory-not-found");
+		// remove all deleted products
+		subcategory.setProducts(subcategory.getProducts().stream().filter(p -> p.getDeleted() == NotDeletedValue)
+				.collect(Collectors.toList()));
+		return SubcategoryDTO.toDTO(subcategory);
+	}
+
+	@Override
+	public List<SubcategoryDTO> findSubcategoryAvailable() {
 		int NotDeletedValue = 0;
 		List<SubcategoryEntity> list = subcategoryRepository.findByDeleted(NotDeletedValue);
+		// remove all deleted products
+		list = list.stream().map(x -> {
+			x.setProducts(x.getProducts().stream().filter(p -> p.getDeleted() == NotDeletedValue)
+					.collect(Collectors.toList()));
+			return x;
+		}).collect(Collectors.toList());
+		return list.stream().map(x -> SubcategoryDTO.toDTO(x)).collect(Collectors.toList());
+	}
 
-//		// remove all products with deleted != 0
-//		list = list.stream().map(x -> {
-//			x.setProducts(x.getProducts().stream().filter(e -> e.getDeleted() == NotDeletedValue)
-//					.collect(Collectors.toList()));
-//			return x;
-//		}).collect(Collectors.toList());
+	@Override
+	public List<SubcategoryDTO> findSubcategoryNotAvailable() {
+		List<SubcategoryEntity> list = subcategoryRepository.findByNotAvailable();
+		return list.stream().map(s -> SubcategoryDTO.toDTO(s)).collect(Collectors.toList());
+	}
 
-		return list.stream().map(x -> modelMapper.map(x, ReadSubcagoryResponse.class)).collect(Collectors.toList());
+	@Override
+	public String reactivitySubcategory(int subcategoryID) {
+		int notDeleteValue = 0;
+		subcategoryRepository.reactivitySubcategory(subcategoryID, notDeleteValue);
+		return "successfully";
 	}
 
 }

@@ -1,6 +1,7 @@
 package com.nhattan.ecommerce.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -18,4 +19,10 @@ public interface IOrderRepository extends JpaRepository<OrderEntity, Integer> {
 	List<OrderEntity> findOrdersByCustomerID(@Param("customerID") int customerID);
 
 	List<OrderEntity> findOrderByTransactStatus(int value);
+	
+	@Query(value = "SELECT * FROM Orders WHERE orderID = :orderID AND customerID = :customerID", nativeQuery = true)
+	Optional<OrderEntity> findOneByOrderIDAndCustomerID(@Param("orderID") int orderID, @Param("customerID") int customerID);
+	
+	@Query(value = "SELECT CAST(SUBSTRING(ISNULL(MAX(orderCode), 'OC000000000'), 3, 11) AS INT) FROM Orders", nativeQuery = true)
+	int getMaxOrderCode();
 }

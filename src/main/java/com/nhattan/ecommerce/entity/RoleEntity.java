@@ -14,9 +14,18 @@ public class RoleEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "roleID")
 	private int roleID;
-	
+
 	@Column(name = "role", unique = true, nullable = false)
 	private String role;
+
+	public RoleEntity() {
+		super();
+	}
+
+	public RoleEntity(String role) {
+		super();
+		this.role = role;
+	}
 
 	public int getRoleID() {
 		return roleID;

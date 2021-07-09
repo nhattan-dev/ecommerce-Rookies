@@ -29,6 +29,15 @@ public class CustomerEntity {
 	@OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "customer")
 	private List<ProductRatingEntity> productRatings = new ArrayList<ProductRatingEntity>();
 
+	public CustomerEntity() {
+		super();
+	}
+
+	public CustomerEntity(int customerID) {
+		super();
+		this.customerID = customerID;
+	}
+
 	public int getCustomerID() {
 		return customerID;
 	}

@@ -2,10 +2,12 @@ package com.nhattan.ecommerce.service;
 
 import java.util.List;
 
-import com.nhattan.ecommerce.response.ReadOrderResponse;
+import com.nhattan.ecommerce.dto.OrderDTO;
 
 public interface IOrderService {
 	void confirmOrder(int orderID);
-	List<ReadOrderResponse> showAllOrder();
-	List<ReadOrderResponse> showOrderByUnconfirmed();
+
+	List<OrderDTO> showAllOrder();
+
+	List<OrderDTO> showOrderByUnconfirmed();
 }

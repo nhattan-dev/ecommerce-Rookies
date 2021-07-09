@@ -7,7 +7,6 @@ import org.springframework.data.repository.query.Param;
 import com.nhattan.ecommerce.entity.ProductPriceEntity;
 
 public interface IProductPriceRepository extends JpaRepository<ProductPriceEntity, Integer> {
-	@Query(value = "SELECT price FROM ProductPrice WHERE productID = :productID "
-			+ "AND date = (SELECT MAX(date) FROM ProductPrice WHERE productID = :productID)", nativeQuery = true)
+	@Query(value = "SELECT TOP 1 price FROM ProductPrice WHERE productID = :productID ORDER BY date DESC", nativeQuery = true)
 	int getLatestPriceByProductID(@Param("productID") int productID);
 }

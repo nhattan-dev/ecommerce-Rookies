@@ -31,9 +31,6 @@ public class OrderDetailEntity {
 	@Column(name = "size", nullable = false)
 	private String size;
 
-	@Column(name = "fulfilled")
-	private int fulfilled = 1;
-
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "productID", nullable = false)
 	private ProductEntity product;
@@ -89,14 +86,6 @@ public class OrderDetailEntity {
 
 	public void setSize(String size) {
 		this.size = size;
-	}
-
-	public int getFulfilled() {
-		return fulfilled;
-	}
-
-	public void setFulfilled(int fulfilled) {
-		this.fulfilled = fulfilled;
 	}
 
 	public ProductEntity getProduct() {

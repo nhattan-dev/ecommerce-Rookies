@@ -23,19 +23,22 @@ public class UserEntity {
 	@Column(name = "userID")
 	private int userID;
 
-	@Column(name = "email", length = 50)
+	@Column(name = "email")
 	private String email;
 
-	@Column(name = "password", length = 50)
+	@Column(name = "password")
 	private String password;
 
-	@Column(name = "phoneNumber", length = 15)
+	@Column(name = "OTP")
+	private String OTP;
+
+	@Column(name = "phoneNumber")
 	private String phoneNumber;
 
-	@Column(name = "firstName", length = 10)
+	@Column(name = "firstName")
 	private String firstName;
 
-	@Column(name = "lastName", length = 20)
+	@Column(name = "lastName")
 	private String lastName;
 
 	@Column(name = "gender")
@@ -80,6 +83,14 @@ public class UserEntity {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public String getOTP() {
+		return OTP;
+	}
+
+	public void setOTP(String oTP) {
+		OTP = oTP;
 	}
 
 	public String getPhoneNumber() {

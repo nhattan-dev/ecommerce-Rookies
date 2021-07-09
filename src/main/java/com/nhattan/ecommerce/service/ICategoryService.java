@@ -5,18 +5,17 @@ import java.util.List;
 import com.nhattan.ecommerce.dto.CategoryDTO;
 
 public interface ICategoryService {
-//	CategoryResponse save(CreateCategoryRequest categoryRequest);
-//	CategoryResponse update(UpdateCategoryRequest categoryRequest);
-//	void delete(Integer id);
-//	List<CategoryResponse> findAll();
-//	List<CategoryResponse> findAllValid();
-	CategoryDTO save(CategoryDTO category);
+	CategoryDTO saveCategory(CategoryDTO category);
 
-	CategoryDTO update(CategoryDTO category);
+	CategoryDTO updateCategory(CategoryDTO category);
 
-	void delete(Integer id);
+	void invalidateCategory(Integer id);
 
 	List<CategoryDTO> findAll();
 
-	List<CategoryDTO> findAllValid();
+	List<CategoryDTO> findCategoryNotAvailable();
+
+	List<CategoryDTO> findCategoryAvailable();
+	
+	String reactivityCategory(int categoryID);
 }

@@ -8,9 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.nhattan.ecommerce.dto.OrderDTO;
 import com.nhattan.ecommerce.exception.NotFoundException;
 import com.nhattan.ecommerce.repository.IOrderRepository;
-import com.nhattan.ecommerce.response.ReadOrderResponse;
 import com.nhattan.ecommerce.service.IOrderService;
 
 @Service
@@ -33,15 +33,15 @@ public class OrderService implements IOrderService {
 	}
 
 	@Override
-	public List<ReadOrderResponse> showAllOrder() {
-		return orderRepository.findAll().stream().map(x -> modelMapper.map(x, ReadOrderResponse.class))
+	public List<OrderDTO> showAllOrder() {
+		return orderRepository.findAll().stream().map(x -> modelMapper.map(x, OrderDTO.class))
 				.collect(Collectors.toList());
 	}
 
 	@Override
-	public List<ReadOrderResponse> showOrderByUnconfirmed() {
+	public List<OrderDTO> showOrderByUnconfirmed() {
 		int OrderUnconfirmValue = 1;
 		return orderRepository.findOrderByTransactStatus(OrderUnconfirmValue).stream() 
-				.map(x -> modelMapper.map(x, ReadOrderResponse.class)).collect(Collectors.toList());
+				.map(x -> modelMapper.map(x, OrderDTO.class)).collect(Collectors.toList());
 	}
 }

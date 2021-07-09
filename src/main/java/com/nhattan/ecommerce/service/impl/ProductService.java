@@ -9,6 +9,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.nhattan.ecommerce.dto.ProductColorDTO;
+import com.nhattan.ecommerce.dto.ProductDTO;
+import com.nhattan.ecommerce.dto.ProductImageDTO;
+import com.nhattan.ecommerce.dto.ProductSizeDTO;
 import com.nhattan.ecommerce.entity.ProductColorEntity;
 import com.nhattan.ecommerce.entity.ProductEntity;
 import com.nhattan.ecommerce.entity.ProductImageEntity;
@@ -22,12 +26,6 @@ import com.nhattan.ecommerce.repository.IProductPriceRepository;
 import com.nhattan.ecommerce.repository.IProductRepository;
 import com.nhattan.ecommerce.repository.IProductSizeRepository;
 import com.nhattan.ecommerce.repository.ISubcategoryRepository;
-import com.nhattan.ecommerce.request.CreateProductColorRequest;
-import com.nhattan.ecommerce.request.CreateProductImageRequest;
-import com.nhattan.ecommerce.request.CreateProductRequest;
-import com.nhattan.ecommerce.request.CreateProductSizeRequest;
-import com.nhattan.ecommerce.request.UpdateProductRequest;
-import com.nhattan.ecommerce.response.ProductResponse;
 import com.nhattan.ecommerce.service.IProductService;
 
 @Service
@@ -56,11 +54,11 @@ public class ProductService implements IProductService {
 
 	@Transactional
 	@Override
-	public ProductResponse saveProduct(CreateProductRequest productRequest) {
+	public ProductDTO saveProduct(ProductDTO productRequest) {
 		if (!subcategoryRepository.exists(productRequest.getSubcategoryID()))
 			throw new NotFoundException("subcategory-not-found");
 
-		ProductEntity newProduct = modelMapper.map(productRequest, ProductEntity.class);
+		ProductEntity newProduct = ProductDTO.toEntity(productRequest);
 		newProduct.setProductID(0);
 		int productID = productRepository.save(newProduct).getProductID();
 
@@ -87,22 +85,21 @@ public class ProductService implements IProductService {
 		newProductPrice.setProduct(new ProductEntity(productID));
 		productPriceRepository.save(newProductPrice);
 
-		return modelMapper.map(productRepository.findOne(productID), ProductResponse.class);
+		return modelMapper.map(productRepository.findOne(productID), ProductDTO.class);
 	}
 
 	@Transactional
 	@Override
-	public void delete(Integer productID) {
+	public void invalidateProduct(Integer productID) {
 		if (!productRepository.exists(productID))
 			throw new NotFoundException("product-not-found");
 		productRepository.deleteByProductID(productID);
 	}
 
-	// chưa xong
 	@Override
-	public List<ProductResponse> findAll(Pageable pageable) {
-		List<ProductResponse> result = productRepository.findByDeletedEquals(0, pageable).stream()
-				.map(x -> modelMapper.map(x, ProductResponse.class)).collect(Collectors.toList());
+	public List<ProductDTO> findAll(Pageable pageable) {
+		List<ProductDTO> result = productRepository.findByDeletedEquals(0, pageable).stream()
+				.map(x -> ProductDTO.toDTO(x)).collect(Collectors.toList());
 
 		// add latest price
 		result = result.stream().map(x -> {
@@ -114,13 +111,48 @@ public class ProductService implements IProductService {
 	}
 
 	@Override
+	public List<ProductDTO> findProductNotAvailable(int page, int limit, String sort) {
+		List<ProductEntity> result = productRepository.findProductNotAvailable(page, limit, sort);
+		return result.stream().map(p -> ProductDTO.toDTO(p)).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<ProductDTO> findProductAvailable(int page, int limit, String sort) {
+		List<ProductEntity> result = productRepository.findProductAvailable(page, limit, sort);
+		return result.stream().map(p -> ProductDTO.toDTO(p)).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<ProductDTO> findProductAvailableBySubcategoryID(int page, int limit, String sort, int subcategoryID) {
+		List<ProductEntity> result = productRepository.findProductAvailableBySubcategory(page, limit, sort,
+				subcategoryID);
+		return result.stream().map(p -> ProductDTO.toDTO(p)).collect(Collectors.toList());
+	}
+
+	@Override
 	public int totalItem() {
 		return (int) productRepository.count();
 	}
 
+	@Override
+	public int totalAvailableItem() {
+		return productRepository.countProductAvailable();
+	}
+
+	@Override
+	public int totalNotAvailableItem() {
+		return productRepository.countProductNotAvailable();
+	}
+
+	@Override
+	public int totalAvailableItemBySubcategory(int subcategoryID) {
+		return productRepository.countProductAvailableBySubcategory(subcategoryID);
+	}
+
+	//CHƯA XONG
 	@Transactional
 	@Override
-	public ProductResponse update(UpdateProductRequest productRequest) {
+	public ProductDTO updateProduct(ProductDTO productRequest) {
 		// category & sub-category != 1
 		if (!productRepository.exists(productRequest.getProductID()))
 			throw new NotFoundException("product-not-found");
@@ -142,21 +174,31 @@ public class ProductService implements IProductService {
 	}
 
 	@Override
-	public ProductResponse findOne(int productID) {
+	public ProductDTO findOneProduct(int productID) {
 		if (!productRepository.exists(productID))
 			throw new NotFoundException("product-not-found");
-		ProductResponse product = modelMapper.map(productRepository.findOne(productID), ProductResponse.class);
+		ProductDTO product = ProductDTO.toDTO(productRepository.findOne(productID));
 		product.setPrice(productPriceRepository.getLatestPriceByProductID(productID));
 		return product;
 	}
 
 	@Override
-	public ProductResponse saveColor(CreateProductColorRequest colorRequest) {
-		ProductEntity product = productRepository.findOne(colorRequest.getProductID());
-		if (product == null)
+	public ProductDTO findOneProductAvailable(int productID) {
+		int notDeletedValue = 0;
+		ProductEntity product = productRepository.findOneValid(notDeletedValue, productID)
+				.orElseThrow(() -> new NotFoundException("product-not-found"));
+		ProductDTO productDTO = ProductDTO.toDTO(product);
+		productDTO.setPrice(productPriceRepository.getLatestPriceByProductID(productID));
+		return productDTO;
+	}
+
+	@Override
+	public ProductColorDTO saveColor(ProductColorDTO colorRequest) {
+		if (!productRepository.exists(colorRequest.getProductID()))
 			throw new NotFoundException("product-not-found");
 
-		if (productColorRepository.existsProductColorByColorLike(colorRequest.getColor()))
+		if (productColorRepository.findOneByColorAndProductID(colorRequest.getColor(), colorRequest.getProductID())
+				.isPresent())
 			throw new ConflictException("product-alread-has-color");
 
 		ProductColorEntity newColor = modelMapper.map(colorRequest, ProductColorEntity.class);
@@ -164,16 +206,16 @@ public class ProductService implements IProductService {
 		newColor.setProductColorID(defaultProductColorID);
 		productColorRepository.save(newColor);
 
-		return modelMapper.map(productRepository.findOne(colorRequest.getProductID()), ProductResponse.class);
+		return modelMapper.map(productRepository.findOne(colorRequest.getProductID()), ProductColorDTO.class);
 	}
 
 	@Override
-	public ProductResponse saveImage(CreateProductImageRequest imageRequest) {
-		ProductEntity product = productRepository.findOne(imageRequest.getProductID());
-		if (product == null)
+	public ProductImageDTO saveImage(ProductImageDTO imageRequest) {
+		if (!productRepository.exists(imageRequest.getProductID()))
 			throw new NotFoundException("product-not-found");
 
-		if (productImageRepository.findProductImageByImagePath(imageRequest.getImagePath()) != null)
+		if (productImageRepository
+				.findOneByImagePathAndProductID(imageRequest.getImagePath(), imageRequest.getProductID()).isPresent())
 			throw new ConflictException("product-alread-has-image");
 
 		ProductImageEntity newImage = modelMapper.map(imageRequest, ProductImageEntity.class);
@@ -181,16 +223,17 @@ public class ProductService implements IProductService {
 		newImage.setProductImageID(defaultProductImageID);
 		productImageRepository.save(newImage);
 
-		return modelMapper.map(productRepository.findOne(imageRequest.getProductID()), ProductResponse.class);
+		return modelMapper.map(productRepository.findOne(imageRequest.getProductID()), ProductImageDTO.class);
 	}
 
 	@Override
-	public ProductResponse saveSize(CreateProductSizeRequest sizeRequest) {
+	public ProductSizeDTO saveSize(ProductSizeDTO sizeRequest) {
 		ProductEntity product = productRepository.findOne(sizeRequest.getProductID());
 		if (product == null)
 			throw new NotFoundException("product-not-found");
 
-		if (productSizeRepository.findProductSizeBySize(sizeRequest.getSize()).isPresent())
+		if (productSizeRepository.findOneBySizeAndProductID(sizeRequest.getSize(), sizeRequest.getProductID())
+				.isPresent())
 			throw new ConflictException("product-alread-has-size");
 
 		ProductSizeEntity newSize = modelMapper.map(sizeRequest, ProductSizeEntity.class);
@@ -198,7 +241,7 @@ public class ProductService implements IProductService {
 		newSize.setProductSizeID(defaultProductSize);
 		productSizeRepository.save(newSize);
 
-		return modelMapper.map(productRepository.findOne(sizeRequest.getProductID()), ProductResponse.class);
+		return modelMapper.map(productRepository.findOne(sizeRequest.getProductID()), ProductSizeDTO.class);
 	}
 
 	@Override
@@ -223,6 +266,13 @@ public class ProductService implements IProductService {
 			throw new NotFoundException("size-not-found");
 		productSizeRepository.delete(productSizeID);
 		return "success";
+	}
+
+	@Override
+	public String reactivityProduct(int productID) {
+		int notDeleteValue = 0;
+		productRepository.reactivityProduct(productID, notDeleteValue);
+		return "successfully";
 	}
 
 }
